@@ -1,14 +1,32 @@
-# astrbot-plugin-helloworld
+# astrbot-plugin-vivid-robot
 
-AstrBot 插件模板 / A template plugin for AstrBot plugin feature
+让群聊机器人更加拟人——主动判断插话时机、人格化回复、积累群内黑话与成员印象、产生成长感。
 
-> [!NOTE]
-> This repo is just a template of [AstrBot](https://github.com/AstrBotDevs/AstrBot) Plugin.
-> 
-> [AstrBot](https://github.com/AstrBotDevs/AstrBot) is an agentic assistant for both personal and group conversations. It can be deployed across dozens of mainstream instant messaging platforms, including QQ, Telegram, Feishu, DingTalk, Slack, LINE, Discord, Matrix, etc. In addition, it provides a reliable and extensible conversational AI infrastructure for individuals, developers, and teams. Whether you need a personal AI companion, an intelligent customer support agent, an automation assistant, or an enterprise knowledge base, AstrBot enables you to quickly build AI applications directly within your existing messaging workflows.
+## 功能
 
-# Supports
+- **智能插话判断**：3 层决策管线（确定性规则 → 概率预过滤 → 小模型判断），最小化 LLM 调用成本
+- **人格化回复**：继承 AstrBot 人格系统，4 级回退（插件指定 → 会话绑定 → Dialogue → UMO 默认）
+- **群聊记忆**：自动积累群内黑话、氛围、成员印象、角色关系，产生"成长感"
+- **社交心理学调节**：基于邓巴数、社会渗透理论、时间节律等调节交互频率
+- **对话续接**：有人接 bot 的话时自动继续对话；被直接喊到时必定回复
+- **防刷屏**：冷却时间 + 最大连续回复数 + 概率预过滤三层保护
 
-- [AstrBot Repo](https://github.com/AstrBotDevs/AstrBot)
-- [AstrBot Plugin Development Docs (Chinese)](https://docs.astrbot.app/dev/star/plugin-new.html)
-- [AstrBot Plugin Development Docs (English)](https://docs.astrbot.app/en/dev/star/plugin-new.html)
+## 安装
+
+将本插件放入 AstrBot 插件目录，在 WebUI 中启用即可。
+
+## 配置要点
+
+1. **群聊白名单**：在 `基础设置` 中配置需要启用的群
+2. **角色名称**：填写 bot 的人格名，群友直接喊到时必定回复
+3. **LLM 提供商**：可分别为判断和回复配置不同模型（判断推荐用小参数模型）
+4. **触发关键词**：可自定义情感触发词（抱怨、吐槽等），提高插话概率
+
+## 依赖
+
+- pydantic >= 2.0.0
+- AstrBot 框架（提供 LLM、人格、KV 存储等能力）
+
+## 与 outputpro 的关系
+
+本插件生成回复后，`astrbot_plugin_outputpro` 会自动对回复进行后处理（分段、错字模拟、艾特解析等），无需额外配置。

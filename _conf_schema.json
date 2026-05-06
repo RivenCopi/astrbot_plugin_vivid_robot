@@ -1,0 +1,297 @@
+{
+    "basic": {
+        "description": "基础设置",
+        "type": "object",
+        "hint": "插件的基础开关和群聊白名单配置",
+        "items": {
+            "enabled": {
+                "type": "bool",
+                "default": true,
+                "description": "启用插件"
+            },
+            "group_list_mode": {
+                "type": "string",
+                "options": ["whitelist", "blacklist", "none"],
+                "default": "whitelist",
+                "description": "群聊权限模式"
+            },
+            "group_list": {
+                "type": "list",
+                "default": [],
+                "description": "群聊白名单/黑名单",
+                "hint": "填写 UMO (如 onebot:GroupMessage:123456) 或群号。用 /sid 获取当前会话 UMO",
+                "items": {"type": "string"}
+            },
+            "personality_name": {
+                "type": "string",
+                "default": "",
+                "description": "角色名称（被直接喊到时必定回复）",
+                "hint": "例如：樱井桃华。群友发消息包含此名称时，即使没有@，bot 也必定回复"
+            },
+            "personality_aliases": {
+                "type": "list",
+                "default": [],
+                "description": "角色别名（也视为被喊到）",
+                "hint": "例如：桃华、桃华妈妈、桃华酱。群友发消息包含任意别名时，也视为被直接喊到，必定回复",
+                "items": {"type": "string"}
+            },
+            "self_id": {
+                "type": "string",
+                "default": "",
+                "description": "Bot 自身 ID",
+                "hint": "用于过滤自己的消息，防止自我触发"
+            }
+        }
+    },
+    "decision": {
+        "description": "判断与回复设置",
+        "type": "object",
+        "hint": "控制 bot 何时插话的判断逻辑",
+        "items": {
+            "decision_provider_id": {
+                "type": "string",
+                "default": "",
+                "description": "判断 LLM 提供商",
+                "hint": "用于判断是否插话的轻量模型。留空则使用当前 UMO 默认提供商",
+                "_special": "select_provider"
+            },
+            "decision_system_prompt": {
+                "type": "text",
+                "default": "你是一个群聊插话判断助手。根据群聊上下文、角色设定，判断是否应该插话/回复。只输出 JSON。",
+                "description": "判断系统提示词"
+            },
+            "reply_provider_id": {
+                "type": "string",
+                "default": "",
+                "description": "回复 LLM 提供商",
+                "hint": "用于生成回复的模型。留空则使用判断提供商或默认提供商",
+                "_special": "select_provider"
+            },
+            "base_reply_probability": {
+                "type": "float",
+                "default": 0.08,
+                "min": 0.0,
+                "max": 1.0,
+                "description": "基础插话概率",
+                "hint": "无特殊触发时，自然插话的概率。推荐 0.05-0.15"
+            },
+            "attention_boost_multiplier": {
+                "type": "float",
+                "default": 3.0,
+                "min": 1.0,
+                "max": 10.0,
+                "description": "注意力提升倍率",
+                "hint": "当有人连续与 bot 对话时，基础回复概率乘以该倍率"
+            },
+            "max_consecutive_replies": {
+                "type": "int",
+                "default": 3,
+                "min": 1,
+                "max": 10,
+                "description": "最大连续回复数",
+                "hint": "防止 bot 连续刷屏，超过此次数后必须等其他人发言"
+            },
+            "cooldown_seconds": {
+                "type": "int",
+                "default": 30,
+                "min": 5,
+                "max": 600,
+                "description": "冷却时间（秒）",
+                "hint": "两次插话之间的最小间隔"
+            },
+            "max_context_messages": {
+                "type": "int",
+                "default": 20,
+                "min": 5,
+                "max": 100,
+                "description": "最大上下文消息数",
+                "hint": "发送给 LLM 判断的最近消息数量"
+            },
+            "trigger_keywords": {
+                "type": "list",
+                "default": ["好累", "好烦", "不想上班", "考研", "加班", "受伤", "emo", "压力好大", "难受", "哭了", "崩溃", "太累了", "学不动"],
+                "description": "情感触发关键词",
+                "hint": "群聊消息包含这些词时，提高插话概率",
+                "items": {"type": "string"}
+            },
+            "decision_llm_temperature": {
+                "type": "float",
+                "default": 0.3,
+                "min": 0.0,
+                "max": 2.0,
+                "description": "判断 LLM 温度"
+            },
+            "skip_forward_content": {
+                "type": "bool",
+                "default": true,
+                "description": "跳过合并转发内容",
+                "hint": "合并转发的消息不提取正文内容，除非有人明确叫 bot 去看"
+            },
+            "skip_link_content": {
+                "type": "bool",
+                "default": true,
+                "description": "跳过链接内容",
+                "hint": "消息中的链接不抓取网页内容，除非有人明确叫 bot 去看"
+            }
+        }
+    },
+    "ocr": {
+        "description": "图片识别(OCR)",
+        "type": "object",
+        "hint": "识别群聊图片内容，辅助判断是否插话。需要视觉模型支持。",
+        "items": {
+            "enable_ocr": {
+                "type": "bool",
+                "default": false,
+                "description": "启用图片识别"
+            },
+            "ocr_provider_id": {
+                "type": "string",
+                "default": "",
+                "description": "OCR 模型提供商",
+                "hint": "需要使用视觉模型（支持 image_urls 参数）。留空则使用判断提供商",
+                "_special": "select_provider"
+            },
+            "ocr_group_list_mode": {
+                "type": "string",
+                "options": ["whitelist", "blacklist", "none"],
+                "default": "whitelist",
+                "description": "OCR 群聊权限模式",
+                "hint": "whitelist=仅白名单群启用，blacklist=除黑名单外启用，none=全部启用"
+            },
+            "ocr_group_list": {
+                "type": "list",
+                "default": [],
+                "description": "OCR 群聊白名单/黑名单",
+                "hint": "填写 UMO 或群号",
+                "items": {"type": "string"}
+            }
+        }
+    },
+    "persona": {
+        "description": "人格设置",
+        "type": "object",
+        "hint": "bot 的人格/角色设定。注意：每个群可以单独设置人格（通过 /persona 指令），群的会话人格优先级高于此处的全局设置。此处仅作为兜底默认值。",
+        "items": {
+            "use_persona": {
+                "type": "bool",
+                "default": true,
+                "description": "启用 AstrBot 人格系统"
+            },
+            "persona_id": {
+                "type": "string",
+                "default": "",
+                "description": "全局默认人格 ID（兜底）",
+                "hint": "仅当群会话/Dialogue/UMO 都未设置人格时使用。每个群可以通过 /persona 单独切换人格，优先级更高。",
+                "_special": "select_persona"
+            },
+            "reply_system_prompt_template": {
+                "type": "text",
+                "default": "你是群聊中的一员，你的角色设定是：\n\n{persona_prompt}\n\n关于这个群的信息：\n- 群内氛围：{group_atmosphere}\n- 群内黑话：{group_slang}\n- 成员印象：{member_impressions}\n\n请用自然的口语回复，1-3句话为宜。不要说出你的设定，不要用角色扮演的格式。如果有人在抱怨/倾诉，给予恰当的共情和安慰。如果有群友质疑你的性格/说话方式，可以在回复末尾自然地带一句\"（管理员可以用 /persona 修改我的人格设定哦）\"。",
+                "description": "回复系统提示词模板",
+                "hint": "支持 {persona_prompt}, {group_atmosphere}, {group_slang}, {member_impressions} 变量"
+            }
+        }
+    },
+    "memory": {
+        "description": "群聊记忆/知识库",
+        "type": "object",
+        "hint": "bot 对群的长期记忆和知识积累",
+        "items": {
+            "enable_memory": {
+                "type": "bool",
+                "default": true,
+                "description": "启用群聊记忆"
+            },
+            "memory_update_interval": {
+                "type": "int",
+                "default": 50,
+                "min": 10,
+                "max": 500,
+                "description": "记忆更新间隔（消息数）",
+                "hint": "每 N 条消息触发一次知识提取"
+            },
+            "max_slang_entries": {
+                "type": "int",
+                "default": 30,
+                "min": 5,
+                "max": 100,
+                "description": "最大黑话条目数"
+            },
+            "max_member_impressions": {
+                "type": "int",
+                "default": 50,
+                "min": 10,
+                "max": 200,
+                "description": "最大成员印象数"
+            },
+            "memory_llm_provider_id": {
+                "type": "string",
+                "default": "",
+                "description": "知识提取 LLM 提供商",
+                "hint": "用于从对话中提取知识的模型。留空则使用判断提供商",
+                "_special": "select_provider"
+            }
+        }
+    },
+    "psychology": {
+        "description": "社交心理学参数",
+        "type": "object",
+        "hint": "基于社会学理论的交互频率调节",
+        "items": {
+            "enable_psychology": {
+                "type": "bool",
+                "default": true,
+                "description": "启用心理学调节"
+            },
+            "dunbar_intimate_size": {
+                "type": "int",
+                "default": 5,
+                "min": 1,
+                "max": 20,
+                "description": "邓巴亲密圈大小"
+            },
+            "dunbar_friend_size": {
+                "type": "int",
+                "default": 15,
+                "min": 5,
+                "max": 50,
+                "description": "邓巴朋友圈大小"
+            },
+            "social_penetration_depth": {
+                "type": "float",
+                "default": 1.0,
+                "min": 0.1,
+                "max": 3.0,
+                "description": "社交渗透深度",
+                "hint": "1.0=正常。值越高，bot 越倾向于深度交流（提观点、问感受等）"
+            },
+            "interaction_novelty_decay": {
+                "type": "float",
+                "default": 0.95,
+                "min": 0.5,
+                "max": 1.0,
+                "description": "互动新鲜感衰减率",
+                "hint": "随互动次数增加，逐渐降低回复频率。1.0=不衰减。0.95约等于每10次互动衰减40%的额外活跃度"
+            }
+        }
+    },
+    "advanced": {
+        "description": "高级设置",
+        "type": "object",
+        "hint": "调试与高级选项",
+        "items": {
+            "debug_mode": {
+                "type": "bool",
+                "default": false,
+                "description": "调试模式"
+            },
+            "log_decision_reasoning": {
+                "type": "bool",
+                "default": false,
+                "description": "记录判断推理过程",
+                "hint": "在日志中输出插话/不插话的判断原因"
+            }
+        }
+    }
+}
